@@ -9,6 +9,10 @@
   <!-- dataLayer måste finnas före både GTM och widgeten. -->
   <script>window.dataLayer = window.dataLayer || [];</script>
 
+  <!-- Debug-shim: får widgeten att ta GTM-push-vägen så live-loggen visar eventet
+       utan en riktig GTM-container. Skickar INTE till GA4 (det kräver GTM nedan). -->
+  <script>window.google_tag_manager = window.google_tag_manager || {};</script>
+
   <!-- GOOGLE TAG MANAGER — avkommentera och byt GTM-XXXXXXX mot ditt container-id.
        Widgeten pushar {event:"leadcaller_..."} till dataLayer; GTM översätter det
        till en GA4-tag. Ren gtag.js utan GTM registrerar INTE dessa pushar.
