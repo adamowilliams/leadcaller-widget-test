@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <title>Björk &amp; Ström Bygg — GA-test</title>
+
+  <!-- dataLayer måste finnas före både GTM och widgeten. -->
+  <script>window.dataLayer = window.dataLayer || [];</script>
+
+  <!-- GOOGLE TAG MANAGER — avkommentera och byt GTM-XXXXXXX mot ditt container-id.
+       Widgeten pushar {event:"leadcaller_..."} till dataLayer; GTM översätter det
+       till en GA4-tag. Ren gtag.js utan GTM registrerar INTE dessa pushar.
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+  -->
+
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; color: #1f2937; line-height: 1.6; }
+    header { background: #1e3a5f; color: #fff; padding: 48px 24px 56px; text-align: center; }
+    header h1 { font-size: 2rem; margin-bottom: 8px; }
+    header p { opacity: 0.85; max-width: 520px; margin: 0 auto; }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
+    .panel { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin-bottom: 18px; }
+    h2 { font-size: 1.1rem; margin-bottom: 8px; color: #1e3a5f; }
+    .src { font-size: 1rem; } .src b { color: #1a73e8; }
+    button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #1a73e8;
+             background: #1a73e8; color: #fff; cursor: pointer; margin: 6px 6px 0 0; }
+    button.ghost { background: transparent; color: #1a73e8; }
+    ol { padding-left: 20px; } li { margin: 4px 0; }
+    code { background: rgba(128,128,128,.16); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+    #log { font-family: ui-monospace, monospace; font-size: 12.5px; background: #111; color: #d7ffd7;
+           border-radius: 10px; padding: 12px; max-height: 280px; overflow: auto; margin-top: 10px; }
+    #log .row { padding: 2px 0; border-bottom: 1px solid #222; white-space: pre-wrap; word-break: break-all; }
+    #log .hit { color: #ffe27a; font-weight: 600; }
+    .empty { color: #888; }
+    footer { border-top: 1px solid #e5e7eb; padding: 24px; text-align: center; font-size: 0.85rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Björk &amp; Ström Bygg</h1>
+    <p>GA-testsida: bevisar att widget-interaktioner når GA4 attribuerade till trafikkälla.</p>
+  </header>
+
+  <main>
+    <div class="panel">
+      <h2>Denna sessions källa: <span class="src"><b id="src">(direkt)</b></span></h2>
+      <p>Byt källa och ladda om — GA4 attribuerar sessionen (och widget-eventen) till den:</p>
+      <button onclick="setSrc('google')">Öppna som ?utm_source=google</button>
+      <button onclick="setSrc('linkedin')">Öppna som ?utm_source=linkedin</button>
+      <button class="ghost" onclick="setSrc('')">Nollställ</button>
+    </div>
+
+    <div class="panel">
+      <h2>Live dataLayer-logg</h2>
+      <p>Det widgeten faktiskt skickar. Gula rader (★) är widget-events.</p>
+      <div id="log"><div class="empty">Väntar… starta en chatt i widgeten nere till höger.</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Så bevisar du hela kedjan</h2>
+      <ol>
+        <li>Slå på <code>sendGtm</code>: admin → widgeten → flik <b>Spårning</b> → Google Tag Manager → <b>Aktiv</b>.</li>
+        <li>Avkommentera GTM-blocket överst + byt <code>GTM-XXXXXXX</code> mot ditt container-id.</li>
+        <li>I GTM: <b>Custom Event</b>-trigger <code>leadcaller_chat_started</code> → <b>GA4 Event</b>-tag mot din property. Publicera.</li>
+        <li>Öppna som <code>?utm_source=google</code>, starta en chatt → gul rad dyker upp här direkt.</li>
+        <li>GA4 → <b>DebugView</b> visar <code>leadcaller_chat_started</code>. Exploration → bryt på <b>Session source</b> → Google vs. annat.</li>
+      </ol>
+    </div>
+  </main>
+
+  <footer>Björk &amp; Ström Bygg AB (påhittat) · GA-testsida för Leadcaller</footer>
+
+  <!-- LEADCALLER-WIDGET — domän-baserad, laddar widgeten för denna sidas domän. -->
+  <script type="module" defer src="https://widget.leadcaller.com/communication-widget.js"></script>
+
+  <script>
+    (function () {
+      var src = new URLSearchParams(location.search).get('utm_source');
+      document.getElementById('src').textContent = src || '(direkt)';
+
+      var log = document.getElementById('log');
+      var seen = 0, cleared = false;
+      function render() {
+        var dl = window.dataLayer || [];
+        if (dl.length === seen) return;
+        if (!cleared) { log.innerHTML = ''; cleared = true; }
+        for (var i = seen; i < dl.length; i++) {
+          var entry = dl[i];
+          var isWidget = entry && typeof entry === 'object' && !Array.isArray(entry) &&
+                         typeof entry.event === 'string' && entry.event.indexOf('leadcaller_') === 0;
+          var row = document.createElement('div');
+          row.className = 'row' + (isWidget ? ' hit' : '');
+          var text;
+          try { text = JSON.stringify(entry); } catch (e) { text = String(entry); }
+          row.textContent = (isWidget ? '★ ' : '  ') + text;
+          log.appendChild(row);
+        }
+        seen = dl.length;
+        log.scrollTop = log.scrollHeight;
+      }
+      setInterval(render, 400);
+    })();
+
+    function setSrc(s) {
+      location.search = s ? '?utm_source=' + encodeURIComponent(s) : '';
+    }
+  </script>
+</body>
+</html>
